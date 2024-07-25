@@ -1,7 +1,9 @@
 package com.ys.batterytrackerapp
 
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.BatteryManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,7 +15,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -39,18 +41,19 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun BatteryStatus(modifier: Modifier = Modifier) {
-    var isBatteryLow by rememberSaveable {
-        mutableStateOf(false)
+    val context = LocalContext.current
+    var isBatteryLow by remember {
+        mutableStateOf(getIsBatteryLow(context))
     }
 
-    val batteryReceiver = BatteryReceiver{
+    val batteryReceiver = BatteryReceiver {
         isBatteryLow = it
     }
     val filter = IntentFilter().apply {
         addAction(Intent.ACTION_BATTERY_LOW)
         addAction(Intent.ACTION_BATTERY_OKAY)
     }
-    LocalContext.current.registerReceiver(batteryReceiver,filter)
+    context.registerReceiver(batteryReceiver, filter)
 
     Image(
         painter = painterResource(
@@ -60,6 +63,14 @@ fun BatteryStatus(modifier: Modifier = Modifier) {
         contentDescription = null,
         modifier = modifier.fillMaxSize()
     )
+}
+
+private fun getIsBatteryLow(context: Context): Boolean {
+    val batteryStatus: Intent? = IntentFilter(Intent.ACTION_BATTERY_CHANGED).let {
+        context.registerReceiver(null, it)
+    }
+    val level = batteryStatus!!.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+    return level <= 20
 }
 
 @Preview(showBackground = true)
