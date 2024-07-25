@@ -66,10 +66,8 @@ fun BatteryStatus(modifier: Modifier = Modifier) {
 }
 
 private fun getIsBatteryLow(context: Context): Boolean {
-    val batteryStatus: Intent? = IntentFilter(Intent.ACTION_BATTERY_CHANGED).let {
-        context.registerReceiver(null, it)
-    }
-    val level = batteryStatus!!.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+    val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+    val level = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
     return level <= 20
 }
 
